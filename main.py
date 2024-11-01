@@ -11,9 +11,6 @@ def index():
     # Load the CSV file
     mainFile = pd.read_csv("main.csv")
 
-    # Filter out rows where 'Event Date', 'Event Name', 'Number', or 'Name' is "---"
-    mainFile = mainFile[~mainFile[['Event Date', 'Event Name', 'Number', 'Name']].isin(['---']).any(axis=1)]
-
     if request.method == 'POST':
         # Update the DataFrame with new remarks and current timestamp from the form
         for i in range(len(mainFile)):
