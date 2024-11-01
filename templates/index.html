@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Manager (ALS)</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px; /* Adds spacing between buttons */
+        }
+        /* Default button styles */
+        .btn {
+            flex: 1; /* Makes all buttons take equal width */
+            padding: 8px 16px; /* Default padding for larger screens */
+            font-size: 1rem; /* Default font size for larger screens */
+        }
+        /* Smaller button styles for small screens */
+        @media (max-width: 576px) {
+            .btn {
+                padding: 5px 10px; /* Smaller padding for small screens */
+                font-size: 0.875rem; /* Smaller font size for small screens */
+            }
+            /* Disable hover effect for small screens */
+            .btn:hover {
+                transform: none; /* Prevents scaling on hover */
+            }
+        }
+        /* Add hover effect for larger screens */
+        @media (min-width: 577px) {
+            .btn:hover {
+                transform: scale(1.05); /* Slightly scale up on hover */
+            }
+        }
+    </style>
+</head>
+<body class="main-screen">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{ messages[0] }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    {% endif %}
+    {% endwith %}
+  
+    <div class="container">
+        <div class="main-card">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-3">
+                <div class="nav-logo d-flex align-items-center">
+                    <a href="LOGO PNG ALS.png">
+                        <img src="https://i.ibb.co/FDK32F4/LOGO-PNG-ALS.png" alt="Web Logo" style="height: 50px; width: auto;">
+                    </a>
+                </div>
+                <h2 class="ml-0 ml-sm-2 mb-2 mb-sm-0" style="font-size: 1.5rem;">ALS Productions Calling Manager</h2>
+                <div class="btn-group flex-wrap mt-2 mt-sm-0">
+                    <form id="uploadForm" method="POST" enctype="multipart/form-data" action="{{ url_for('upload_csv') }}">
+                        <input type="file" name="file" accept=".csv" style="display: none;" onchange="document.getElementById('uploadForm').submit();">
+                        <button type="button" class="btn btn-outline mb-2 mb-sm-0" onclick="document.querySelector('input[name=file]').click()">
+                            <i class="fas fa-upload"></i> Upload
+                        </button>
+                    </form>
+                    <button class="btn btn-outline mb-2 mb-sm-0" onclick="window.location.href='{{ url_for('download_csv') }}'">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                    <button class="btn btn-outline mb-2 mb-sm-0" onclick="downloadAndSharePDF()">
+                        <i class="fas fa-share"></i> Share
+                    </button>
+                </div>
+            </div>
+
+            <!-- Remarks form with the same route for submission -->
+            <form method="POST" action="{{ url_for('index') }}">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>U-ID</th>
+                                <th>A/c Mgr</th>
+                                <th>Event Details</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in userRow %}
+                            <tr>
+                                <td>ID{{ loop.index }}</td>
+                                <td>{{ row['A/c Mgr'] }}</td>
+                                <td>
+                                    <strong>Name:</strong> {{ row['Name'] }}<br>
+                                    <strong>Number:</strong> <a href="tel:{{ row['Number'] }}">{{ row['Number'] }}</a><br>
+                                    <strong>Event Name:</strong> {{ row['Event Name'] }}<br>
+                                    <strong>Event Date:</strong> {{ row['Event Date'] }}
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="remarks_{{ loop.index }}" 
+                                            value="{{ row['Remarks'] or '' }}" 
+                                            placeholder="{{ 'No remarks entered' if not row['Remarks'] else 'Enter remarks' }}">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="submit">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="form-text text-muted"><strong>Last Updated: </strong>  {{ row['Last Updated'] or 'Never' }}</small>
+                                        <small class="form-text text-muted"><strong>Previously Updated: </strong> {{ row['Previous Updated'] or 'Never' }}</small>
+                                        <small class="form-text text-muted"><strong>Previous Remark: </strong> {{ row['Previous Remark'] or 'None' }}</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script>
+    function downloadAndSharePDF() {
+        // Step 1: Start the download
+        const pdfDownloadUrl = `${window.location.origin}/download_pdf`;
+        const link = document.createElement('a');
+        link.href = pdfDownloadUrl;
+        link.download = "main.pdf";
+        link.click();
+        
+        // Step 2: Delay to allow download to start, then open WhatsApp
+        setTimeout(() => {
+            const message = "The file has been downloaded. Please attach it to share.";
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }, 300);  // Adjust delay time if necessary
+    }
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</html>
